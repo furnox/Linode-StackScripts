@@ -77,8 +77,8 @@ export -f user_add_pubkey
 function user_setup_shell() {
     echo "### user_setup_shell"
     USERNAME="$1"
-    wget -O "/home/$USERNAME/.bash_aliases" https://raw.githubusercontent.com/furnox/Linode-StackScripts/new/.bash_aliases
-    wget -O "/home/$USERNAME/.bash_functions" https://raw.githubusercontent.com/furnox/Linode-StackScripts/new/.bash_functions
+    wget -O "/home/$USERNAME/.bash_aliases" https://raw.githubusercontent.com/furnox/Linode-StackScripts/master/.bash_aliases
+    wget -O "/home/$USERNAME/.bash_functions" https://raw.githubusercontent.com/furnox/Linode-StackScripts/master/.bash_functions
     chown "$USERNAME:$USERNAME" "/home/$USERNAME/.bash_aliases" "/home/$USERNAME/.bash_functions"
 }
 export -f user_setup_shell
