@@ -1,0 +1,155 @@
+#!/bin/bash
+
+#
+# StackScript Bash Library
+# Inspired by the Linode StackScript Bash Library Copyright (c) 2010 Linode LLC / Christopher S. Aker <caker@linode.com>
+#
+
+###########################################################
+# system
+###########################################################
+
+function system_update() {
+    echo "### system_update"
+    apt-get update
+    apt -q -y install aptitude
+    aptitude -y full-upgrade grub-pc=
+}
+export -f system_update
+
+function system_primary_ip() {
+    echo "### system_primary_ip"
+    echo $(ip addr show eth0 | fgrep " inet " | egrep -o "(?[[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}" | head -1)
+}
+export -f system_primary_ip
+
+function install_system_utils() {
+    echo "### install_system_utils"
+    aptitude -y install build-essential tree htop
+}
+export -f install_system_utils
+
+function restart_services() {
+    echo "### restart_services"
+    for service in $(ls /tmp/restart-* | cut -d- -f2-10); do
+        systemctl restart $service
+        rm -f /tmp/restart-$service
+    done
+}
+export -f restart_services
+
+###########################################################
+# users
+###########################################################
+
+function add_sudo_user() {
+    echo "### add_sudo_user"
+    USERNAME="$1"
+    USERPASS="$2"
+
+    if [ -z "$USERNAME" ] || [ -z "$USERPASS" ]; then
+        echo "No new username and/or password entered"
+        return 1;
+    fi
+    
+    adduser $USERNAME --disabled-password --gecos ""
+    echo "$USERNAME:$USERPASS" | chpasswd
+    usermod -aG sudo $USERNAME
+}
+export -f add_sudo_user
+
+function user_add_pubkey() {
+    echo "### user_add_pubkey"
+    USERNAME="$1"
+    USERPUBKEY="$2"
+    
+    if [ -z "$USERNAME" ] || [ -z "$USERPUBKEY" ]; then
+        echo "Must provide a username and a pubkey"
+        return 1;
+    fi
+    
+    mkdir -p /home/$USERNAME/.ssh
+    echo "$USERPUBKEY" >> /home/$USERNAME/.ssh/authorized_keys
+    chown -R "$USERNAME":"$USERNAME" /home/$USERNAME/.ssh
+}
+export -f user_add_pubkey
+
+function user_setup_shell() {
+    echo "### user_setup_shell"
+    USERNAME="$1"
+    wget -O "/home/$USERNAME/.bash_aliases" https://raw.githubusercontent.com/furnox/Linode-StackScripts/new/.bash_aliases
+    wget -O "/home/$USERNAME/.bash_functions" https://raw.githubusercontent.com/furnox/Linode-StackScripts/new/.bash_functions
+    chown "$USERNAME:$USERNAME" "/home/$USERNAME/.bash_aliases" "/home/$USERNAME/.bash_functions"
+}
+export -f user_setup_shell
+
+###########################################################
+# sshd
+###########################################################
+
+function secure_sshd() {
+    echo "### secure_sshd"
+    echo "
+# StashScript settings
+PermitRootLogin no
+PubkeyAuthentication yes
+PasswordAuthentication no
+PermitEmptyPasswords no
+UsePAM no
+X11Forwarding no
+PrintMotd yes
+" >> /etc/ssh/sshd_config
+    touch /tmp/restart-sshd
+}
+export -f secure_sshd
+
+function set_sshd_port() {
+    echo "### set_sshd_port"
+    PORT="$1"
+    
+    echo "Port $1" >> /etc/ssh/sshd_config
+    touch /tmp/restart-sshd
+}
+export -f set_sshd_port
+
+###########################################################
+# apache
+###########################################################
+
+function apache_install() {
+    echo "### apache_install"
+    aptitude -y install apache2
+}
+export -f apache_install
+
+###########################################################
+# php
+###########################################################
+
+function php_install() {
+    echo "### php_install"
+    aptitude -y install php7.2 php7.2-mysql libapache2-mod-php7.2
+    touch /tmp/restart-apache2
+}
+export -f php_install
+
+###########################################################
+# mysql-server
+###########################################################
+
+function mysql_install() {
+    echo "### mysql_install"
+    ROOTPASSWD="$1"
+    if [ -z "$ROOTPASSWD" ]; then
+        echo "Need the root password"
+        return 1;
+    fi
+
+    echo "mysql-server mysql-server/root_password password $ROOTPASSWD" | debconf-set-selections
+    echo "mysql-server mysql-server/root_password_again password $ROOTPASSWD" | debconf-set-selections
+    aptitude -y install mysql-server mysql-client
+
+    echo "Sleeping while MySQL starts up for the first time..."
+    sleep 5
+}
+export -f mysql_install
