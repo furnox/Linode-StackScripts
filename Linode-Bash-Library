@@ -13,7 +13,7 @@ function system_update() {
     echo "### system_update"
     apt-get update
     apt -q -y install aptitude
-    aptitude -y full-upgrade grub-pc=
+    aptitude -y safe-upgrade
 }
 export -f system_update
 
