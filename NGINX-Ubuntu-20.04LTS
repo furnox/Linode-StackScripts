@@ -1,0 +1,12 @@
+#!/bin/bash
+
+system_update
+install_system_utils
+add_sudo_user "$UTIL_USER" "$UTIL_USER_PASSWD"
+user_add_pubkey "$UTIL_USER" "$PUB_KEY"
+user_setup_shell "$UTIL_USER"
+secure_sshd
+set_sshd_port "$SSH_PORT"
+nginx_install
+
+restart_services

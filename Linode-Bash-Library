@@ -17,8 +17,13 @@ function system_update() {
 }
 export -f system_update
 
+function get_ubuntu_codename() {
+    echo "$(lsb_release -c | cut -f2)"
+}
+
+export -f get_ubuntu_codename
+
 function system_primary_ip() {
-    echo "### system_primary_ip"
     echo $(ip addr show eth0 | fgrep " inet " | egrep -o "(?[[:digit:]]{1,3}\.){3}[[:digit:]]{1,3}" | head -1)
 }
 export -f system_primary_ip
@@ -121,6 +126,16 @@ function apache_install() {
     aptitude -y install apache2
 }
 export -f apache_install
+
+###########################################################
+# nginx
+###########################################################
+function nginx_install() {
+    add-apt-repository -y ppa:nginx/stable
+    apt update
+    apt install -y nginx
+}
+export -f nginx_install
 
 ###########################################################
 # php
