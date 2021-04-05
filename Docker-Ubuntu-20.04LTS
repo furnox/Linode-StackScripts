@@ -7,5 +7,7 @@ user_add_pubkey "$UTIL_USER" "$PUB_KEY"
 user_setup_shell "$UTIL_USER"
 secure_sshd
 set_sshd_port "$SSH_PORT"
+install_docker_engine
+install_docker_compose
 
 restart_services
