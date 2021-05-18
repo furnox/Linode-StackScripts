@@ -167,7 +167,7 @@ export -f nginx_install
 
 function php_install() {
     echo "### php_install"
-    aptitude -y install php7.2 php7.2-mysql libapache2-mod-php7.2
+    aptitude -y install php7.4 php7.4-mysql libapache2-mod-php7.4
     touch /tmp/restart-apache2
 }
 export -f php_install
