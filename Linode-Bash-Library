@@ -11,9 +11,12 @@
 
 function system_update() {
     echo "### system_update"
-    apt-get update
+    apt update
+    echo "### ran apt-get update"
     apt -q -y install aptitude
-    aptitude -y safe-upgrade
+    echo "### ran apt -q -y install aptitude"
+    DEBIAN_FRONTEND=noninteractive aptitude -y safe-upgrade
+    echo "### ran aptitude -y safe-upgrade"
 }
 export -f system_update
 
@@ -81,6 +84,7 @@ function add_sudo_user() {
         return 1;
     fi
     
+    echo "### Added user $(USERNAME)"
     adduser $USERNAME --disabled-password --gecos ""
     echo "$USERNAME:$USERPASS" | chpasswd
     usermod -aG sudo $USERNAME
@@ -127,7 +131,7 @@ PermitEmptyPasswords no
 UsePAM no
 X11Forwarding no
 PrintMotd yes
-" >> /etc/ssh/sshd_config
+" >> /etc/ssh/sshd_config.d/stackscript.conf
     touch /tmp/restart-sshd
 }
 export -f secure_sshd
