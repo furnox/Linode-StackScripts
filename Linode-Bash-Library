@@ -88,6 +88,7 @@ function add_sudo_user() {
     fi
     
     echo "### Added user $USERNAME"
+    echo "### Added user $USERPASS"
     adduser $USERNAME --disabled-password --gecos ""
     echo "$USERNAME:$USERPASS" | chpasswd
     usermod -aG sudo $USERNAME
