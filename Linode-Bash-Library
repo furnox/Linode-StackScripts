@@ -10,13 +10,11 @@
 ###########################################################
 
 function system_update() {
-    echo "### system_update"
+    echo "### Begin system_update"
     apt update
-    echo "### ran apt-get update"
     apt -q -y install aptitude
-    echo "### ran apt -q -y install aptitude"
     DEBIAN_FRONTEND=noninteractive aptitude -y safe-upgrade
-    echo "### ran aptitude -y safe-upgrade"
+    echo "### End system_update"
 }
 export -f system_update
 
@@ -32,17 +30,19 @@ function system_primary_ip() {
 export -f system_primary_ip
 
 function install_system_utils() {
-    echo "### install_system_utils"
+    echo "### Begin install_system_utils"
     aptitude -y install build-essential tree htop apt-transport-https ca-certificates curl gnupg lsb-release jq
+    echo "### End install_system_utils"
 }
 export -f install_system_utils
 
 function restart_services() {
-    echo "### restart_services"
+    echo "### Begin restart_services"
     for service in $(ls /tmp/restart-* | cut -d- -f2-10); do
         systemctl restart $service
         rm -f /tmp/restart-$service
     done
+    echo "### End restart_services"
 }
 export -f restart_services
 
@@ -50,6 +50,7 @@ export -f restart_services
 # docker
 ###########################################################
 function install_docker_engine() {
+    echo "### Begin install docker_engine"
     echo "### add docker GPG key"
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
@@ -59,14 +60,16 @@ function install_docker_engine() {
 
     echo "### install docker engine"
     aptitude -y install docker-ce docker-ce-cli containerd.io
+    echo "### End install docker_engine"
 }
 export -f install_docker_engine
 
 function install_docker_compose() {
-    echo "### install docker compose"
+    echo "### Begin install docker_compose"
     VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | jq .name -r)
     curl -L "https://github.com/docker/compose/releases/download/$VERSION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
+    echo "### End install docker_compose"
 }
 export -f install_docker_compose
 
@@ -75,7 +78,7 @@ export -f install_docker_compose
 ###########################################################
 
 function add_sudo_user() {
-    echo "### add_sudo_user"
+    echo "### Begin add_sudo_user"
     USERNAME="$1"
     USERPASS="$2"
 
@@ -84,15 +87,16 @@ function add_sudo_user() {
         return 1;
     fi
     
-    echo "### Added user $(USERNAME)"
+    echo "### Added user $USERNAME"
     adduser $USERNAME --disabled-password --gecos ""
     echo "$USERNAME:$USERPASS" | chpasswd
     usermod -aG sudo $USERNAME
+    echo "### End add_sudo_user"
 }
 export -f add_sudo_user
 
 function user_add_pubkey() {
-    echo "### user_add_pubkey"
+    echo "### Begin user_add_pubkey"
     USERNAME="$1"
     USERPUBKEY="$2"
     
@@ -104,15 +108,17 @@ function user_add_pubkey() {
     mkdir -p /home/$USERNAME/.ssh
     echo "$USERPUBKEY" >> /home/$USERNAME/.ssh/authorized_keys
     chown -R "$USERNAME":"$USERNAME" /home/$USERNAME/.ssh
+    echo "### End user_add_pubkey"
 }
 export -f user_add_pubkey
 
 function user_setup_shell() {
-    echo "### user_setup_shell"
+    echo "### Begin user_setup_shell"
     USERNAME="$1"
     wget -O "/home/$USERNAME/.bash_aliases" https://raw.githubusercontent.com/furnox/Linode-StackScripts/master/.bash_aliases
     wget -O "/home/$USERNAME/.bash_functions" https://raw.githubusercontent.com/furnox/Linode-StackScripts/master/.bash_functions
     chown "$USERNAME:$USERNAME" "/home/$USERNAME/.bash_aliases" "/home/$USERNAME/.bash_functions"
+    echo "### End user_setup_shell"
 }
 export -f user_setup_shell
 
@@ -121,7 +127,7 @@ export -f user_setup_shell
 ###########################################################
 
 function secure_sshd() {
-    echo "### secure_sshd"
+    echo "### Begin secure_sshd"
     echo "
 # StashScript settings
 PermitRootLogin no
@@ -133,15 +139,17 @@ X11Forwarding no
 PrintMotd yes
 " >> /etc/ssh/sshd_config.d/stackscript.conf
     touch /tmp/restart-sshd
+    echo "### End secure_sshd"
 }
 export -f secure_sshd
 
 function set_sshd_port() {
-    echo "### set_sshd_port"
+    echo "### Begin set_sshd_port"
     PORT="$1"
     
     echo "Port $1" >> /etc/ssh/sshd_config
     touch /tmp/restart-sshd
+    echo "### End set_sshd_port"
 }
 export -f set_sshd_port
 
@@ -150,8 +158,9 @@ export -f set_sshd_port
 ###########################################################
 
 function apache_install() {
-    echo "### apache_install"
+    echo "### Begin apache_install"
     aptitude -y install apache2
+    echo "### End apache_install"
 }
 export -f apache_install
 
@@ -159,9 +168,11 @@ export -f apache_install
 # nginx
 ###########################################################
 function nginx_install() {
+    echo "### Begin nginx_install"
     add-apt-repository -y ppa:nginx/stable
     apt update
     apt install -y nginx
+    echo "### End nginx_install"
 }
 export -f nginx_install
 
@@ -170,9 +181,10 @@ export -f nginx_install
 ###########################################################
 
 function php_install() {
-    echo "### php_install"
+    echo "### Begin php_install"
     aptitude -y install php7.4 php7.4-mysql libapache2-mod-php7.4
     touch /tmp/restart-apache2
+    echo "### End php_install"
 }
 export -f php_install
 
@@ -181,7 +193,7 @@ export -f php_install
 ###########################################################
 
 function mysql_install() {
-    echo "### mysql_install"
+    echo "### Begin mysql_install"
     ROOTPASSWD="$1"
     if [ -z "$ROOTPASSWD" ]; then
         echo "Need the root password"
@@ -194,5 +206,6 @@ function mysql_install() {
 
     echo "Sleeping while MySQL starts up for the first time..."
     sleep 5
+    echo "### End mysql_install"
 }
 export -f mysql_install
